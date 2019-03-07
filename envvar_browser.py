@@ -41,17 +41,18 @@ STORE_WINDOW_GEOMETRY = True
 # ----------------------------------------------------------------------------
 
 class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
-	""" Environment variables editor dialog class.
+	""" Environment Variables Browser dialog class.
 	"""
 	def __init__(self, parent=None):
 		super(EnvVarsDialog, self).__init__(parent)
 		self.parent = parent
 
-		self.setupUI(window_object=WINDOW_OBJECT, 
-					 window_title=WINDOW_TITLE, 
-					 ui_file=UI_FILE, 
-					 stylesheet=STYLESHEET, 
-					 store_window_geometry=STORE_WINDOW_GEOMETRY)  # re-write as **kwargs ?
+		self.setupUI(
+			window_object=WINDOW_OBJECT,
+			window_title=WINDOW_TITLE,
+			ui_file=UI_FILE,
+			stylesheet=STYLESHEET,
+			store_window_geometry=STORE_WINDOW_GEOMETRY)  # re-write as **kwargs ?
 
 		# Set window flags
 		self.setWindowFlags(QtCore.Qt.Dialog)

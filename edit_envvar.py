@@ -11,13 +11,12 @@
 
 
 import os
-import sys
 
 from Qt import QtCore, QtGui, QtWidgets
 import ui_template as UI
 
 # Import custom modules
-#import osOps
+# import oswrapper
 
 
 # ----------------------------------------------------------------------------
@@ -47,11 +46,12 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 		super(Dialog, self).__init__(parent)
 		self.parent = parent
 
-		self.setupUI(window_object=WINDOW_OBJECT, 
-		             window_title=WINDOW_TITLE, 
-		             ui_file=UI_FILE, 
-		             stylesheet=STYLESHEET, 
-		             store_window_geometry=STORE_WINDOW_GEOMETRY)  # re-write as **kwargs ?
+		self.setupUI(
+			window_object=WINDOW_OBJECT,
+			window_title=WINDOW_TITLE,
+			ui_file=UI_FILE,
+			stylesheet=STYLESHEET,
+			store_window_geometry=STORE_WINDOW_GEOMETRY)  # re-write as **kwargs ?
 
 		self.conformFormLayoutLabels(self.ui)
 
@@ -72,16 +72,16 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 		# Connect signals & slots
 		self.ui.key_lineEdit.textChanged.connect(self.updateUI)
 		self.ui.value_lineEdit.textChanged.connect(self.updateUI)
-		self.ui.browse_toolButton.clicked.connect(self.browseDir)
+
+		self.ui.valueList_listWidget.itemSelectionChanged.connect(self.updateToolbarUI)
+		self.ui.valueList_listWidget.itemChanged.connect(self.updateEntry)
+		self.ui.add_toolButton.clicked.connect(self.addEntry)
+		self.ui.remove_toolButton.clicked.connect(self.removeEntry)
+		self.ui.moveUp_toolButton.clicked.connect(self.moveEntryUp)
+		self.ui.moveDown_toolButton.clicked.connect(self.moveEntryDown)
 
 		self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).clicked.connect(self.ok)
 		self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(self.reject)
-
-		# Context menus
-		self.addContextMenu(self.ui.browse_toolButton, "Browse directory...", self.browseDir) #, 'icon_folder')
-		self.addContextMenu(self.ui.browse_toolButton, "Browse file...", self.browseFile) #, 'icon_file')
-		# self.addContextMenu(self.ui.browseList_toolButton, "Browse directory...", self.browseDir) #, 'icon_folder')
-		# self.addContextMenu(self.ui.browseList_toolButton, "Browse file...", self.browseFile) #, 'icon_file')
 
 		# Set input validators
 		alphanumeric_validator = QtGui.QRegExpValidator(QtCore.QRegExp(r'[a-zA-Z_][a-zA-Z0-9_]*'), self.ui.key_lineEdit)
@@ -101,30 +101,131 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 		self.ui.value_lineEdit.setText(value)
 
 		# Set up list view if value contains multiple paths
-		if os.pathsep in value:
+		if os.pathsep in value:  # Multi-path mode
 			self.updateValueList(value)
 			self.ui.value_lineEdit.textEdited.connect(self.updateValueList)
 			self.ui.valueList_frame.show()
-			self.ui.browse_toolButton.hide() # ideally move to toolbar
-			self.ui.toolbar_frame.hide() # temporary until implemented fully
-		else:
+			self.addContextMenu(self.ui.browseList_toolButton, "Browse directory...", self.browseDirList)
+			self.addContextMenu(self.ui.browseList_toolButton, "Browse file...", self.browseFileList)
+			self.ui.browse_toolButton.hide()
+		else:  # Single value mode
 			self.ui.valueList_frame.hide()
+			self.addContextMenu(self.ui.browse_toolButton, "Browse directory...", self.browseDir)
+			self.addContextMenu(self.ui.browse_toolButton, "Browse file...", self.browseFile)
 			self.setFixedHeight(self.minimumSizeHint().height())
 
 		self.updateUI()
+		self.updateToolbarUI()
 
 		return self.exec_()
+
+
+	def updateToolbarUI(self):
+		""" Update the toolbar UI based on the current selection.
+		"""
+		# No items selected...
+		if len(self.ui.valueList_listWidget.selectedItems()) == 0:
+			self.ui.remove_toolButton.setEnabled(False)
+			self.ui.moveUp_toolButton.setEnabled(False)
+			self.ui.moveDown_toolButton.setEnabled(False)
+			self.ui.browseList_toolButton.setEnabled(False)
+		# More than one item selected...
+		else:
+			self.ui.remove_toolButton.setEnabled(True)
+			self.ui.moveUp_toolButton.setEnabled(True)
+			self.ui.moveDown_toolButton.setEnabled(True)
+			self.ui.browseList_toolButton.setEnabled(True)
 
 
 	def updateValueList(self, value):
 		""" Update the value list view.
 		"""
-		valueList = value.split(os.pathsep)
+		self.valueList = value.split(os.pathsep)
+
 		self.ui.valueList_listWidget.clear()
-		self.ui.valueList_listWidget.addItems(valueList)
-		# for index in range(self.ui.valueList_listWidget.count()):
-		# 	item = self.ui.valueList_listWidget.item(index)
-		# 	item.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
+		self.ui.valueList_listWidget.addItems(self.valueList)
+
+		# Make items editable
+		for index in range(self.ui.valueList_listWidget.count()):
+			item = self.ui.valueList_listWidget.item(index)
+			item.setFlags(item.flags() | QtCore.Qt.ItemIsEditable)
+
+
+	def updateValueLine(self):
+		""" Update the value line edit.
+		"""
+		valueStr = os.pathsep.join(n for n in self.valueList)
+
+		# self.ui.value_lineEdit.blockSignals(True)
+		self.ui.value_lineEdit.setText(valueStr)
+		# self.ui.value_lineEdit.blockSignals(False)
+
+
+	def updateEntry(self, item):
+		""" Update an entry after editing.
+		"""
+		i = self.ui.valueList_listWidget.indexFromItem(item).row()
+		self.valueList[i] = item.text()
+		self.updateValueLine()
+
+
+	def addEntry(self):
+		""" Adds an entry to the value list view, before the selected row.
+			If nothing is selected, appends the entry to the end.
+		"""
+		newItem = QtWidgets.QListWidgetItem()
+		newItem.setFlags(newItem.flags() | QtCore.Qt.ItemIsEditable)
+
+		selectionLs = self.ui.valueList_listWidget.selectedItems()
+		if selectionLs:
+			for item in selectionLs:
+				i = self.ui.valueList_listWidget.indexFromItem(item).row()
+				self.valueList.insert(i, "")
+				self.ui.valueList_listWidget.insertItem(i, newItem)
+		else:
+			self.valueList.append("")
+			self.ui.valueList_listWidget.addItem(newItem)
+
+		self.updateValueLine()
+
+
+	def removeEntry(self):
+		""" Removes an entry from the value list view.
+		"""
+		for item in self.ui.valueList_listWidget.selectedItems():
+			i = self.ui.valueList_listWidget.indexFromItem(item).row()
+			self.valueList.pop(i)
+			self.ui.valueList_listWidget.takeItem(i)
+
+		self.updateValueLine()
+
+
+	def moveEntryUp(self):
+		""" Moves an entry up in the value list view.
+		"""
+		self.moveEntry(-1)
+
+
+	def moveEntryDown(self):
+		""" Moves an entry down in the value list view.
+		"""
+		self.moveEntry(1)
+
+
+	def moveEntry(self, amount):
+		""" Moves an entry up or down by amount in the value list view.
+		"""
+		for item in self.ui.valueList_listWidget.selectedItems():
+			i = self.ui.valueList_listWidget.indexFromItem(item).row()
+			if 0 <= i+amount < len(self.valueList):
+				valueToMove = self.valueList[i]
+				self.valueList.pop(i)
+				self.valueList.insert(i+amount, valueToMove)
+			itemToMove = self.ui.valueList_listWidget.takeItem(i)
+			self.ui.valueList_listWidget.insertItem(i+amount, itemToMove)
+			self.ui.valueList_listWidget.setCurrentItem(itemToMove)
+
+		self.updateValueLine()
 
 
 	def updateUI(self):
@@ -140,35 +241,50 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 		self.ui.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(enable)
 
 		# Change key text to uppercase
-		#self.ui.key_lineEdit.setText(self.ui.key_lineEdit.text().upper())
+		# self.ui.key_lineEdit.setText(self.ui.key_lineEdit.text().upper())
 
 
 	def browseDir(self):
-		""" Opens a dialog from which to select a folder.
+		""" Opens a folder browser (single entry).
 		"""
-		#startingDir = osOps.translatePath(self.ui.value_lineEdit.text())
 		startingDir = self.ui.value_lineEdit.text()
-		if os.path.isdir(startingDir):
-			dialogHome = startingDir
-		else:
-			dialogHome = os.environ.get('JOB', os.getcwd())
-
-		# Append slash to path if it's a Windows drive letter, otherwise file
-		# dialog won't open the correct location
-		if dialogHome.endswith(':'):
-			dialogHome += '/'
-
-		dialogPath = self.folderDialog(dialogHome)
-
+		dialogPath = self.browse(startingDir, folder=True)
 		if dialogPath:
 			self.ui.value_lineEdit.setText(dialogPath)
 
 
 	def browseFile(self):
-		""" Opens a dialog from which to select a file.
+		""" Opens a file browser (single entry).
 		"""
-		#startingDir = os.path.dirname(osOps.translatePath(self.ui.value_lineEdit.text()))
 		startingDir = os.path.dirname(self.ui.value_lineEdit.text())
+		dialogPath = self.browse(startingDir, folder=False)
+		if dialogPath:
+			self.ui.value_lineEdit.setText(dialogPath)
+
+
+	def browseDirList(self):
+		""" Opens a folder browser (multi-path entry).
+		"""
+		for item in self.ui.valueList_listWidget.selectedItems():
+			startingDir = item.text()
+			dialogPath = self.browse(startingDir, folder=True)
+			if dialogPath:
+				item.setText(dialogPath)
+
+
+	def browseFileList(self):
+		""" Opens a file browser (multi-path entry).
+		"""
+		for item in self.ui.valueList_listWidget.selectedItems():
+			startingDir = os.path.dirname(item.text())
+			dialogPath = self.browse(startingDir, folder=False)
+			if dialogPath:
+				item.setText(dialogPath)
+
+
+	def browse(self, startingDir, folder=True):
+		""" Opens a dialog from which to select a file or folder.
+		"""
 		if os.path.isdir(startingDir):
 			dialogHome = startingDir
 		else:
@@ -179,10 +295,10 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 		if dialogHome.endswith(':'):
 			dialogHome += '/'
 
-		dialogPath = self.fileDialog(dialogHome)
-
-		if dialogPath:
-			self.ui.value_lineEdit.setText(dialogPath)
+		if folder:
+			return self.folderDialog(dialogHome)
+		else:
+			return self.fileDialog(dialogHome)
 
 
 	def ok(self):
