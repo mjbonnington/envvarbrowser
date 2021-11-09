@@ -3,9 +3,9 @@
 # edit_envvar.py
 #
 # Mike Bonnington <mjbonnington@gmail.com>
-# (c) 2018-2019
+# (c) 2018-2021
 #
-# Environment Variables Browser
+# Environment Variables Editor
 # A simple dialog for editing an environment variable (key and value).
 # If the value is a list of paths, display in a more user-readable format.
 
@@ -16,49 +16,42 @@ from Qt import QtCore, QtGui, QtWidgets
 import ui_template as UI
 
 # Import custom modules
-# import oswrapper
 
 
 # ----------------------------------------------------------------------------
 # Configuration
 # ----------------------------------------------------------------------------
 
+cfg = {}
+
 # Set window title and object names
-WINDOW_TITLE = "Edit Environment Variable"
-WINDOW_OBJECT = "EditEnvVarUI"
+cfg['window_object'] = "editEnvVarUI"
+cfg['window_title'] = "Edit Environment Variable"
 
 # Set the UI and the stylesheet
-UI_FILE = 'edit_envvar.ui'
-STYLESHEET = 'style.qss'  # Set to None to use the parent app's stylesheet
+cfg['ui_file'] = os.path.join(os.path.dirname(__file__), 'forms', 'edit_envvar.ui')
+cfg['stylesheet'] = None
 
 # Other options
-STORE_WINDOW_GEOMETRY = False
-
+cfg['store_window_geometry'] = False
 
 # ----------------------------------------------------------------------------
 # Main dialog class
 # ----------------------------------------------------------------------------
 
 class Dialog(QtWidgets.QDialog, UI.TemplateUI):
-	""" Edit Environment Variable dialog class.
-	"""
+	"""Edit Environment Variable dialog class."""
+
 	def __init__(self, parent=None):
 		super(Dialog, self).__init__(parent)
 		self.parent = parent
 
-		self.setupUI(
-			window_object=WINDOW_OBJECT,
-			window_title=WINDOW_TITLE,
-			ui_file=UI_FILE,
-			stylesheet=STYLESHEET,
-			store_window_geometry=STORE_WINDOW_GEOMETRY)  # re-write as **kwargs ?
-
+		self.setupUI(**cfg)
 		self.conformFormLayoutLabels(self.ui)
 
-		# Set window flags
+		# Set window icon, flags and other Qt attributes
+		self.setWindowIcon(self.iconSet('edit.svg', tintNormal=False))
 		self.setWindowFlags(QtCore.Qt.Dialog)
-
-		# Set other Qt attributes
 		self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 
 		# Set icons
@@ -89,10 +82,10 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def display(self, key, value):
-		""" Display the dialog.
-		"""
+		"""Display the dialog."""
+
 		if key:
-			self.setWindowTitle("%s: %s" %(WINDOW_TITLE, key))
+			self.setWindowTitle("%s: %s" % (cfg['window_title'], key))
 			self.ui.key_lineEdit.setReadOnly(True)
 		else:
 			self.setWindowTitle("Add New Environment Variable")
@@ -121,8 +114,8 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def updateToolbarUI(self):
-		""" Update the toolbar UI based on the current selection.
-		"""
+		"""Update the toolbar UI based on the current selection."""
+
 		# No items selected...
 		if len(self.ui.valueList_listWidget.selectedItems()) == 0:
 			self.ui.remove_toolButton.setEnabled(False)
@@ -138,8 +131,8 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def updateValueList(self, value):
-		""" Update the value list view.
-		"""
+		"""Update the value list view."""
+
 		self.valueList = value.split(os.pathsep)
 
 		self.ui.valueList_listWidget.clear()
@@ -152,8 +145,8 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def updateValueLine(self):
-		""" Update the value line edit.
-		"""
+		"""Update the value line edit."""
+
 		valueStr = os.pathsep.join(n for n in self.valueList)
 
 		# self.ui.value_lineEdit.blockSignals(True)
@@ -162,16 +155,18 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def updateEntry(self, item):
-		""" Update an entry after editing.
-		"""
+		"""Update an entry after editing."""
+
 		i = self.ui.valueList_listWidget.indexFromItem(item).row()
 		self.valueList[i] = item.text()
 		self.updateValueLine()
 
 
 	def addEntry(self):
-		""" Adds an entry to the value list view, before the selected row.
-			If nothing is selected, appends the entry to the end.
+		"""Add an entry to the value list view.
+
+		The entry will be added before the selected row. If nothing is
+		selected, append the entry to the end.
 		"""
 		newItem = QtWidgets.QListWidgetItem()
 		newItem.setFlags(newItem.flags() | QtCore.Qt.ItemIsEditable)
@@ -190,8 +185,8 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def removeEntry(self):
-		""" Removes an entry from the value list view.
-		"""
+		"""Remove an entry from the value list view."""
+
 		for item in self.ui.valueList_listWidget.selectedItems():
 			i = self.ui.valueList_listWidget.indexFromItem(item).row()
 			self.valueList.pop(i)
@@ -201,20 +196,20 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def moveEntryUp(self):
-		""" Moves an entry up in the value list view.
-		"""
+		"""Move an entry up in the value list view."""
+
 		self.moveEntry(-1)
 
 
 	def moveEntryDown(self):
-		""" Moves an entry down in the value list view.
-		"""
+		"""Move an entry down in the value list view."""
+
 		self.moveEntry(1)
 
 
 	def moveEntry(self, amount):
-		""" Moves an entry up or down by amount in the value list view.
-		"""
+		"""Move an entry up or down by amount in the value list view."""
+
 		for item in self.ui.valueList_listWidget.selectedItems():
 			i = self.ui.valueList_listWidget.indexFromItem(item).row()
 			if 0 <= i+amount < len(self.valueList):
@@ -229,8 +224,8 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def updateUI(self):
-		""" Disables the OK button if either of the text fields are empty or
-			invalid.
+		"""Disable the OK button if either of the text fields are empty or
+		invalid.
 		"""
 		enable = True
 		if self.ui.key_lineEdit.text() == "":
@@ -245,8 +240,8 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def browseDir(self):
-		""" Opens a folder browser (single entry).
-		"""
+		"""Open a folder browser (single entry)."""
+
 		startingDir = self.ui.value_lineEdit.text()
 		dialogPath = self.browse(startingDir, folder=True)
 		if dialogPath:
@@ -254,8 +249,8 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def browseFile(self):
-		""" Opens a file browser (single entry).
-		"""
+		"""Open a file browser (single entry)."""
+
 		startingDir = os.path.dirname(self.ui.value_lineEdit.text())
 		dialogPath = self.browse(startingDir, folder=False)
 		if dialogPath:
@@ -263,8 +258,8 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def browseDirList(self):
-		""" Opens a folder browser (multi-path entry).
-		"""
+		"""Open a folder browser (multi-path entry)."""
+
 		for item in self.ui.valueList_listWidget.selectedItems():
 			startingDir = item.text()
 			dialogPath = self.browse(startingDir, folder=True)
@@ -273,8 +268,8 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def browseFileList(self):
-		""" Opens a file browser (multi-path entry).
-		"""
+		"""Open a file browser (multi-path entry)."""
+
 		for item in self.ui.valueList_listWidget.selectedItems():
 			startingDir = os.path.dirname(item.text())
 			dialogPath = self.browse(startingDir, folder=False)
@@ -283,12 +278,12 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def browse(self, startingDir, folder=True):
-		""" Opens a dialog from which to select a file or folder.
-		"""
+		"""Open a dialog from which to select a file or folder."""
+
 		if os.path.isdir(startingDir):
 			dialogHome = startingDir
 		else:
-			dialogHome = os.environ.get('JOB', os.getcwd())
+			dialogHome = os.environ.get('IC_JOB', os.getcwd())
 
 		# Append slash to path if it's a Windows drive letter, otherwise file
 		# dialog won't open the correct location
@@ -302,22 +297,23 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def ok(self):
-		""" Dialog accept function.
-		"""
+		"""Dialog accept function."""
+
 		self.key = self.ui.key_lineEdit.text()
 		self.value = self.ui.value_lineEdit.text()
 		self.accept()
 
 
 	def keyPressEvent(self, event):
-		""" Override function to prevent Enter / Esc keypresses triggering
-			OK / Cancel buttons.
-		"""
-		if event.key() == QtCore.Qt.Key_Return or event.key() == QtCore.Qt.Key_Enter:
+		"""Event handler to detect when key is pressed."""
+
+		# Prevent Enter / Esc keypresses triggering OK / Cancel buttons.
+		if event.key() == QtCore.Qt.Key_Return \
+		or event.key() == QtCore.Qt.Key_Enter:
 			return
 
 
 	def hideEvent(self, event):
-		""" Event handler for when window is hidden.
-		"""
+		"""Event handler for when window is hidden."""
+
 		self.storeWindow()  # Store window geometry

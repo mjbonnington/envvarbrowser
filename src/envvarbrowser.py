@@ -1,13 +1,19 @@
 #!/usr/bin/python
 
-# envvar_browser.py
+# envvarbrowser.py
 #
 # Mike Bonnington <mjbonnington@gmail.com>
-# (c) 2018-2019
+# (c) 2018-2021
 #
 # Environment Variables Browser
+#
 # A tool for viewing and editing environment variables.
-# Note that it's not possible change the system environment.
+# Useful for debugging purposes or just to check the current environment.
+# Env vars are searchable by key and/or value and can be created, edited or
+# deleted.
+# Note that the app inherits its environment and any changes you make within
+# this tool will only apply to its own environment. It's not possible to
+# change the system environment.
 
 
 import os
@@ -24,41 +30,43 @@ import edit_envvar
 # Configuration
 # ----------------------------------------------------------------------------
 
+cfg = {}
+
 # Set window title and object names
-WINDOW_TITLE = "Environment Variables"
-WINDOW_OBJECT = "EnvVarsUI"
+cfg['window_object'] = "envVarsUI"
+cfg['window_title'] = "Environment Variables"
 
 # Set the UI and the stylesheet
-UI_FILE = 'envvar_browser.ui'
-STYLESHEET = 'style.qss'  # Set to None to use the parent app's stylesheet
+cfg['ui_file'] = os.path.join(os.path.dirname(__file__), 'forms', 'envvarbrowser.ui')
+cfg['stylesheet'] = 'style.qss'
 
 # Other options
-STORE_WINDOW_GEOMETRY = True
-
+cfg['store_window_geometry'] = True
 
 # ----------------------------------------------------------------------------
 # Begin main dialog class
 # ----------------------------------------------------------------------------
 
 class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
-	""" Environment Variables Browser dialog class.
-	"""
+	"""Environment Variables Browser dialog class."""
+
 	def __init__(self, parent=None):
 		super(EnvVarsDialog, self).__init__(parent)
 		self.parent = parent
 
-		self.setupUI(
-			window_object=WINDOW_OBJECT,
-			window_title=WINDOW_TITLE,
-			ui_file=UI_FILE,
-			stylesheet=STYLESHEET,
-			store_window_geometry=STORE_WINDOW_GEOMETRY)  # re-write as **kwargs ?
+		self.setupUI(**cfg)
 
-		# Set window flags
+		# Set window icon, flags and other Qt attributes
+		self.setWindowIcon(self.iconSet('computer-symbolic.svg', tintNormal=False))
 		self.setWindowFlags(QtCore.Qt.Dialog)
+		# self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 
-		# Set other Qt attributes
-		self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+		# Set up about dialog
+		about = lambda: self.about(
+			app_name=cfg['window_title'], 
+			app_version="v" + os.getenv('REZ_IC_ENVVAR_VERSION'), 
+			description="A tool for viewing and editing environment variables\n", 
+			credits="Principal developer: Mike Bonnington")
 
 		# Set icons
 		self.ui.reload_toolButton.setIcon(self.iconSet('refresh.svg'))
@@ -66,6 +74,7 @@ class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
 		self.ui.remove_toolButton.setIcon(self.iconSet('remove.svg'))
 		self.ui.edit_toolButton.setIcon(self.iconSet('edit.svg'))
 		self.ui.searchFilterClear_toolButton.setIcon(self.iconSet('clear.svg'))
+		self.ui.about_toolButton.setIcon(self.iconSet('help-about.svg'))
 
 		# Connect signals & slots
 		self.accepted.connect(self.save)  # Save settings if dialog accepted
@@ -84,6 +93,8 @@ class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
 		self.ui.envVars_treeWidget.itemSelectionChanged.connect(self.updateToolbarUI)
 		self.ui.envVars_treeWidget.itemDoubleClicked.connect(self.editEnvVar)
 
+		self.ui.about_toolButton.clicked.connect(about)
+
 		self.ui.main_buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.accept)
 		self.ui.main_buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(self.reject)
 
@@ -95,8 +106,8 @@ class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def updateToolbarUI(self):
-		""" Update the toolbar UI based on the current selection.
-		"""
+		"""Update the toolbar UI based on the current selection."""
+
 		# No items selected...
 		if len(self.ui.envVars_treeWidget.selectedItems()) == 0:
 			self.ui.remove_toolButton.setEnabled(False)
@@ -112,19 +123,19 @@ class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def reloadEnvVars(self):
-		""" Reload environment variables by making a copy of the os.environ
-			dictionary.
+		"""Reload environment variables by making a copy of the os.environ
+		dictionary.
 		"""
 		self.environ = dict(os.environ)
 		self.populateEnvVarList()
 
 
 	def populateEnvVarList(self, selectItem=None): #, searchFilter=""):
-		""" Populate the environment variables list view.
+		"""Populate the environment variables list view.
 
-			'selectItem' specifies an item by name that will be selected
-			automatically.
-			'searchFilter' is a search string to filter the list.
+		'selectItem' specifies an item by name that will be selected
+		automatically.
+		'searchFilter' is a search string to filter the list.
 		"""
 		searchFilter = self.ui.searchFilter_lineEdit.text()
 
@@ -134,11 +145,10 @@ class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
 		# Clear tree widget
 		self.ui.envVars_treeWidget.clear()
 
-		for key in self.environ.keys():
-			value = self.environ[key]
+		for key, value in self.environ.items():
 
 			# Populate list view, using filter
-			if searchFilter is not "":
+			if searchFilter != "":
 				searchScope = ""
 				if self.getCheckBoxValue(self.ui.searchKeys_checkBox):
 					searchScope += key.lower()
@@ -169,8 +179,8 @@ class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def envVarEntry(self, key, value):
-		""" Return a new entry in the environment variables list view.
-		"""
+		"""Return a new entry in the environment variables list view."""
+
 		item = QtWidgets.QTreeWidgetItem(self.ui.envVars_treeWidget)
 		item.setText(0, key)
 		item.setText(1, value)
@@ -179,10 +189,10 @@ class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def addEnvVar(self, value=""):
-		""" Open the edit environment variable dialog to add a new environment
-			variable.
-			TODO: on Windows, when checking if the env var already exists,
-			the check should be case-insensitive.
+		"""Open the edit environment variable dialog to add a new env var.
+
+		TODO: on Windows, when checking if the env var already exists, the
+		check should be case-insensitive.
 		"""
 		editEnvVarDialog = edit_envvar.Dialog(parent=self)
 		if editEnvVarDialog.display("", value):
@@ -202,8 +212,8 @@ class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def editEnvVar(self):
-		""" Open edit environment variable dialog.
-		"""
+		"""Open edit environment variable dialog."""
+
 		item = self.ui.envVars_treeWidget.selectedItems()[0]
 		key = item.text(0)
 		value = item.text(1)
@@ -215,8 +225,8 @@ class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def removeEnvVars(self):
-		""" Remove the selected environment variable(s).
-		"""
+		"""Remove the selected environment variable(s)."""
+
 		for item in self.ui.envVars_treeWidget.selectedItems():
 			self.environ.pop(item.text(0), None)
 			index = self.ui.envVars_treeWidget.indexOfTopLevelItem(item)
@@ -224,14 +234,15 @@ class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def clearFilter(self):
-		""" Clear the search filter field.
-		"""
+		"""Clear the search filter field."""
+
 		self.ui.searchFilter_lineEdit.clear()
 
 
 	def save(self):
-		""" Save data by writing to the os.environ dictionary.
-			Existing environment variables will be cleared first.
+		"""Save data by writing to the os.environ dictionary.
+
+		Existing environment variables will be cleared first.
 		"""
 		# os.environ = dict(self.environ) # this doesn't actually set the env vars
 		os.environ.clear()
@@ -240,27 +251,38 @@ class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
 
 
 	def keyPressEvent(self, event):
-		""" Override function to prevent Enter / Esc keypresses triggering
-			OK / Cancel buttons.
-		"""
-		if event.key() == QtCore.Qt.Key_Return or event.key() == QtCore.Qt.Key_Enter:
+		"""Event handler to detect when key is pressed."""
+
+		# Prevent Enter / Esc keypresses triggering OK / Cancel buttons.
+		if event.key() == QtCore.Qt.Key_Return \
+		or event.key() == QtCore.Qt.Key_Enter:
 			return
 
 
 	def hideEvent(self, event):
-		""" Event handler for when window is hidden.
-		"""
+		"""Event handler for when window is hidden."""
+
 		self.storeWindow()  # Store window geometry
 
 # ----------------------------------------------------------------------------
 # End main dialog class
 # ============================================================================
-# Run as standalone app
+# Run functions
 # ----------------------------------------------------------------------------
 
-if __name__ == "__main__":
-	app = QtWidgets.QApplication(sys.argv)
+def run(session, **kwargs):
+	"""Run inside host app."""
 
-	myApp = EnvVarsDialog()
-	myApp.show()
-	sys.exit(app.exec_())
+	try:  # Show the UI
+		session.envVarsUI.display(**kwargs)
+	except:  # Create the UI
+		session.envVarsUI = EnvVarsDialog(parent=UI._main_window())
+		session.envVarsUI.display(**kwargs)
+
+
+# Run as standalone app
+if __name__ == "__main__":
+	main_app = QtWidgets.QApplication(sys.argv)
+	main_window = EnvVarsDialog()
+	main_window.show()
+	sys.exit(main_app.exec_())
