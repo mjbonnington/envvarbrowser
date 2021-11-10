@@ -1,0 +1,14 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>add.svg</file>
+    <file>clear.svg</file>
+    <file>computer-symbolic.svg</file>
+    <file>edit.svg</file>
+    <file>folder-open.svg</file>
+    <file>help-about.svg</file>
+    <file>move-down.svg</file>
+    <file>move-up.svg</file>
+    <file>refresh.svg</file>
+    <file>remove.svg</file>
+  </qresource>
+</RCC>

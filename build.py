@@ -9,12 +9,12 @@ def build(source_path, build_path, install_path, targets):
 		src = os.path.join(source_path, 'src')
 		dest = os.path.join(build_path, 'src')
 
-		# if os.path.exists(dest):
-		# 	print('\tdelete "%s"' % dest)
-		# 	shutil.rmtree(dest)
+		if os.path.exists(dest):
+			print('\tdelete "%s"' % dest)
+			shutil.rmtree(dest)
 
 		print('\tcopy "%s" -> "%s"' % (src, dest))
-		shutil.copytree(src, dest, dirs_exist_ok=True)
+		shutil.copytree(src, dest)#, dirs_exist_ok=True)
 		print("--- build complete ---")
 
 
@@ -26,7 +26,7 @@ def build(source_path, build_path, install_path, targets):
 			shutil.rmtree(install_path)
 
 		print('\tcopy "%s" -> "%s"' % (src, install_path))
-		shutil.copytree(src, install_path, dirs_exist_ok=True)
+		shutil.copytree(src, install_path)#, dirs_exist_ok=True)
 		print('\tdelete "%s"' % build_path)
 		shutil.rmtree(os.path.dirname(build_path), ignore_errors=True)
 		print("--- install complete ---")

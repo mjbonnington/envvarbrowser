@@ -270,14 +270,14 @@ class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
 # Run functions
 # ----------------------------------------------------------------------------
 
-def run(session, **kwargs):
+def run(session):
 	"""Run inside host app."""
 
 	try:  # Show the UI
-		session.envVarsUI.display(**kwargs)
+		session.envVarsUI.show()
 	except:  # Create the UI
 		session.envVarsUI = EnvVarsDialog(parent=UI._main_window())
-		session.envVarsUI.display(**kwargs)
+		session.envVarsUI.show()
 
 
 # Run as standalone app

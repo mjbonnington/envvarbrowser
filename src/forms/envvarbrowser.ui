@@ -106,7 +106,7 @@
        </widget>
       </item>
       <item>
-       <spacer name="toolbar_horizontalSpacer">
+       <spacer name="toolbar_horizontalSpacer1">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
@@ -185,6 +185,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="searchKeys_checkBox">
+        <property name="toolTip">
+         <string>Search on environment variable keys</string>
+        </property>
         <property name="text">
          <string>Keys</string>
         </property>
@@ -195,6 +198,9 @@
       </item>
       <item>
        <widget class="QCheckBox" name="searchValues_checkBox">
+        <property name="toolTip">
+         <string>Search on environment variable values</string>
+        </property>
         <property name="text">
          <string>Values</string>
         </property>
@@ -202,6 +208,22 @@
          <bool>false</bool>
         </property>
        </widget>
+      </item>
+      <item>
+       <spacer name="toolbar_horizontalSpacer2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Minimum</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>12</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
       <item>
        <widget class="QToolButton" name="about_toolButton">
@@ -275,6 +297,18 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>envVars_treeWidget</tabstop>
+  <tabstop>reload_toolButton</tabstop>
+  <tabstop>add_toolButton</tabstop>
+  <tabstop>remove_toolButton</tabstop>
+  <tabstop>edit_toolButton</tabstop>
+  <tabstop>searchFilter_lineEdit</tabstop>
+  <tabstop>searchFilterClear_toolButton</tabstop>
+  <tabstop>searchKeys_checkBox</tabstop>
+  <tabstop>searchValues_checkBox</tabstop>
+  <tabstop>about_toolButton</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
