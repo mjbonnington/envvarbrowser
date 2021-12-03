@@ -65,7 +65,7 @@ class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
 		about = lambda: self.about(
 			app_name=cfg['window_title'], 
 			app_version="v" + os.getenv('REZ_IC_ENVVAR_VERSION'), 
-			description="A tool for viewing and editing environment variables\n", 
+			description="A tool for viewing and editing environment variables.\n", 
 			credits="Principal developer: Mike Bonnington")
 
 		# Set icons
@@ -282,6 +282,12 @@ def run(session):
 
 # Run as standalone app
 if __name__ == "__main__":
+	print("%s v%s" % (cfg['window_title'], os.getenv('REZ_IC_ENVVAR_VERSION')))
+	try:
+		QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
+	except AttributeError:
+		pass
+
 	main_app = QtWidgets.QApplication(sys.argv)
 	main_window = EnvVarsDialog()
 	main_window.show()
