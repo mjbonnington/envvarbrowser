@@ -3,7 +3,7 @@
 # envvarbrowser.py
 #
 # Mike Bonnington <mjbonnington@gmail.com>
-# (c) 2018-2021
+# (c) 2018-2022
 #
 # Environment Variables Browser
 #
@@ -30,18 +30,16 @@ import edit_envvar
 # Configuration
 # ----------------------------------------------------------------------------
 
-cfg = {}
+cfg = {
+	'window_object': "envVarsUI", 
+	'window_title': "Environment Variables", 
 
-# Set window title and object names
-cfg['window_object'] = "envVarsUI"
-cfg['window_title'] = "Environment Variables"
+	'ui_file': os.path.join(os.path.dirname(__file__), 'forms', 'envvarbrowser.ui'), 
+	'stylesheet': 'style.qss', 
+	# 'icon': 'computer-symbolic.svg', 
 
-# Set the UI and the stylesheet
-cfg['ui_file'] = os.path.join(os.path.dirname(__file__), 'forms', 'envvarbrowser.ui')
-cfg['stylesheet'] = 'style.qss'
-
-# Other options
-cfg['store_window_geometry'] = True
+	'store_window_geometry': True, 
+}
 
 # ----------------------------------------------------------------------------
 # Begin main dialog class

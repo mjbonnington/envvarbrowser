@@ -3,7 +3,7 @@
 # edit_envvar.py
 #
 # Mike Bonnington <mjbonnington@gmail.com>
-# (c) 2018-2021
+# (c) 2018-2022
 #
 # Environment Variables Editor
 # A simple dialog for editing an environment variable (key and value).
@@ -22,18 +22,16 @@ import ui_template as UI
 # Configuration
 # ----------------------------------------------------------------------------
 
-cfg = {}
+cfg = {
+	'window_object': "editEnvVarUI", 
+	'window_title': "Edit Environment Variable", 
 
-# Set window title and object names
-cfg['window_object'] = "editEnvVarUI"
-cfg['window_title'] = "Edit Environment Variable"
+	'ui_file': os.path.join(os.path.dirname(__file__), 'forms', 'edit_envvar.ui'), 
+	'stylesheet': None, 
+	# 'icon': 'edit.svg', 
 
-# Set the UI and the stylesheet
-cfg['ui_file'] = os.path.join(os.path.dirname(__file__), 'forms', 'edit_envvar.ui')
-cfg['stylesheet'] = None
-
-# Other options
-cfg['store_window_geometry'] = False
+	'store_window_geometry': False, 
+}
 
 # ----------------------------------------------------------------------------
 # Main dialog class
