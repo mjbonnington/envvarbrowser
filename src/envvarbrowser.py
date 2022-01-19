@@ -30,19 +30,26 @@ import edit_envvar
 # Configuration
 # ----------------------------------------------------------------------------
 
-cfg = {
-	'window_object': "envVarsUI", 
-	'window_title': "Environment Variables", 
+cfg = dict(
+	app_id="ic_envvar",  # This should match the Rez package name
+	app_name="Environment Variables", 
+	window_object="envVarsUI", 
 
-	'ui_file': os.path.join(os.path.dirname(__file__), 'forms', 'envvarbrowser.ui'), 
-	'stylesheet': 'style.qss', 
-	# 'icon': 'computer-symbolic.svg', 
+	vendor="mjbonnington", 
+	copyright="(c) 2018-2022", 
 
-	'store_window_geometry': True, 
-}
+	description="A tool for viewing and editing environment variables.", 
+	credits="Principal developer: Mike Bonnington", 
+
+	ui_file=os.path.join(os.path.dirname(__file__), 'forms', 'envvarbrowser.ui'), 
+	stylesheet='style.qss', 
+	# icon='computer-symbolic.svg', 
+
+	store_window_geometry=True, 
+)
 
 # ----------------------------------------------------------------------------
-# Begin main dialog class
+# Main dialog class
 # ----------------------------------------------------------------------------
 
 class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
@@ -52,19 +59,13 @@ class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
 		super(EnvVarsDialog, self).__init__(parent)
 		self.parent = parent
 
+		# UI template setup
 		self.setupUI(**cfg)
 
 		# Set window icon, flags and other Qt attributes
 		self.setWindowIcon(self.iconSet('computer-symbolic.svg', tintNormal=False))
 		self.setWindowFlags(QtCore.Qt.Dialog)
 		# self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
-
-		# Set up about dialog
-		about = lambda: self.about(
-			app_name=cfg['window_title'], 
-			app_version="v" + os.getenv('REZ_IC_ENVVAR_VERSION'), 
-			description="A tool for viewing and editing environment variables.\n", 
-			credits="Principal developer: Mike Bonnington")
 
 		# Set icons
 		self.ui.reload_toolButton.setIcon(self.iconSet('refresh.svg'))
@@ -91,7 +92,7 @@ class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
 		self.ui.envVars_treeWidget.itemSelectionChanged.connect(self.updateToolbarUI)
 		self.ui.envVars_treeWidget.itemDoubleClicked.connect(self.editEnvVar)
 
-		self.ui.about_toolButton.clicked.connect(about)
+		self.ui.about_toolButton.clicked.connect(self.about_dialog)
 
 		self.ui.main_buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.accept)
 		self.ui.main_buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(self.reject)
@@ -280,7 +281,6 @@ def run(session):
 
 # Run as standalone app
 if __name__ == "__main__":
-	print("%s v%s" % (cfg['window_title'], os.getenv('REZ_IC_ENVVAR_VERSION')))
 	try:
 		QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
 	except AttributeError:

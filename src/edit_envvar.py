@@ -22,16 +22,17 @@ import ui_template as UI
 # Configuration
 # ----------------------------------------------------------------------------
 
-cfg = {
-	'window_object': "editEnvVarUI", 
-	'window_title': "Edit Environment Variable", 
+cfg = dict(
+	app_id="ic_envvar",  # This should match the Rez package name
+	app_name="Edit Environment Variable", 
+	window_object="editEnvVarUI", 
 
-	'ui_file': os.path.join(os.path.dirname(__file__), 'forms', 'edit_envvar.ui'), 
-	'stylesheet': None, 
-	# 'icon': 'edit.svg', 
+	ui_file=os.path.join(os.path.dirname(__file__), 'forms', 'edit_envvar.ui'), 
+	stylesheet=None, 
+	# icon='edit.svg', 
 
-	'store_window_geometry': False, 
-}
+	store_window_geometry=False, 
+)
 
 # ----------------------------------------------------------------------------
 # Main dialog class
@@ -44,6 +45,7 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 		super(Dialog, self).__init__(parent)
 		self.parent = parent
 
+		# UI template setup
 		self.setupUI(**cfg)
 		self.conformFormLayoutLabels(self.ui)
 
@@ -83,7 +85,7 @@ class Dialog(QtWidgets.QDialog, UI.TemplateUI):
 		"""Display the dialog."""
 
 		if key:
-			self.setWindowTitle("%s: %s" % (cfg['window_title'], key))
+			self.setWindowTitle("%s: %s" % (self.windowTitle(), key))
 			self.ui.key_lineEdit.setReadOnly(True)
 		else:
 			self.setWindowTitle("Add New Environment Variable")

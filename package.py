@@ -2,11 +2,11 @@
 
 name = 'ic_envvar'
 
-version = '1.0.4'
+version = '1.0.5'
 
 description = 'Environment Variables Browser'
 
-variants = [['python-2.7+']]
+# variants = [['python-2.7+']]
 
 requires = ['ic_ui']
 
