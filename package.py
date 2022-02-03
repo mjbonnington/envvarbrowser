@@ -2,17 +2,19 @@
 
 name = 'ic_envvar'
 
-version = '1.0.5'
+version = '1.0.6'
 
 description = 'Environment Variables Browser'
 
-# variants = [['python-2.7+']]
-
-requires = ['ic_ui']
-
 authors = ['mjbonnington']
 
-build_command = 'python {root}/build.py {install}'
+requires = ['ic_ui-2+']
+
+build_requires = [
+    'rezlib', 
+]
+
+build_command = 'python -m build {install}'
 
 
 def commands():
