@@ -2,7 +2,7 @@
 
 name = 'ic_envvar'
 
-version = '1.0.6'
+version = '1.0.7'
 
 description = 'Environment Variables Browser'
 
@@ -21,3 +21,4 @@ def commands():
     env.PATH.append("{root}")
     env.PYTHONPATH.append('{root}')
     env.IC_ICONPATH.append('{root}/icons')
+    alias("envvar", "python {root}/envvarbrowser.py")

@@ -43,7 +43,7 @@ cfg = dict(
 
 	ui_file=os.path.join(os.path.dirname(__file__), 'forms', 'envvarbrowser.ui'), 
 	stylesheet='style.qss', 
-	# icon='computer-symbolic.svg', 
+	icon='envvar.png', 
 
 	store_window_geometry=True, 
 )
@@ -63,7 +63,6 @@ class EnvVarsDialog(QtWidgets.QDialog, UI.TemplateUI):
 		self.setupUI(**cfg)
 
 		# Set window icon, flags and other Qt attributes
-		self.setWindowIcon(self.iconSet('computer-symbolic.svg', tintNormal=False))
 		self.setWindowFlags(QtCore.Qt.Dialog)
 		# self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 
